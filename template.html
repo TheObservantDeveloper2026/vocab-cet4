@@ -187,6 +187,19 @@
   .speak-btn.playing svg { animation: spk 1s ease-in-out infinite; }
   @keyframes spk { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
   .hint { margin-top: 18px; font-size: 13px; color: var(--text-sub); }
+  /* 例句区块（背面） */
+  .example {
+    margin-top: 16px;
+    max-width: 100%;
+    text-align: left;
+    background: #f4f6ff;
+    border-left: 3px solid var(--primary);
+    border-radius: 10px;
+    padding: 10px 14px;
+  }
+  .example[hidden] { display: none !important; }
+  .ex-en { font-size: 14px; line-height: 1.65; color: #39415a; word-break: break-word; }
+  .ex-zh { margin-top: 5px; font-size: 12.5px; line-height: 1.6; color: var(--text-sub); }
   .tag {
     position: absolute;
     top: 14px;
@@ -502,6 +515,10 @@
           <div class="face-inner">
             <span class="tag" id="tagBack"></span>
             <div class="word zh" id="wordBack"></div>
+            <div class="example" id="exWrap" hidden>
+              <div class="ex-en" id="exEn"></div>
+              <div class="ex-zh" id="exZh"></div>
+            </div>
             <div class="hint" id="enBack"></div>
           </div>
         </div>
@@ -752,6 +769,15 @@ function playAudio(url, btn, text) {
   } catch (e) { retry(); }
 }
 
+// 背面例句（数据里没有 ex 字段时整块隐藏）；两种模式共用，需在分支外定义
+function setExample(d) {
+  const ex = d && d.ex;
+  const has = !!(ex && ex.en);
+  $('exWrap').hidden = !has;
+  $('exEn').textContent = has ? ex.en : '';
+  $('exZh').textContent = has ? (ex.zh || '') : '';
+}
+
 if (!LEARN_MODE) {
 // ================= 经典模式（原有逻辑，未改动） =================
 const store = {
@@ -848,16 +874,19 @@ function render() {
     $('wordBack').innerHTML = '';
     $('enBack').textContent = '';
     $('tagBack').textContent = '';
+    $('exWrap').hidden = true;
     backFillTimer = setTimeout(() => {
       $('wordBack').innerHTML = d.zh;
       $('tagBack').textContent = d.group;
       $('enBack').textContent = d.en + (d.ipa ? '  ' + d.ipa : '');
+      setExample(d);
       backFillTimer = null;
     }, 250);
   } else {
     $('wordBack').innerHTML = d.zh;
     $('tagBack').textContent = d.group;
     $('enBack').textContent = d.en + (d.ipa ? '  ' + d.ipa : '');
+    setExample(d);
   }
   updateHeader();
 }
@@ -1151,16 +1180,19 @@ function renderLearnCard() {
   $('btnGood').querySelector('small').textContent = previewIv(c, 2) + ' 天后复习';
   if (wasFlipped) {
     $('wordBack').innerHTML = ''; $('enBack').textContent = ''; $('tagBack').textContent = '';
+    $('exWrap').hidden = true;
     backFillTimer = setTimeout(() => {
       $('wordBack').innerHTML = d.zh;
       $('tagBack').textContent = d.group || '自定义';
       $('enBack').textContent = d.en + (d.ipa ? '  ' + d.ipa : '');
+      setExample(d);
       backFillTimer = null;
     }, 250);
   } else {
     $('wordBack').innerHTML = d.zh;
     $('tagBack').textContent = d.group || '自定义';
     $('enBack').textContent = d.en + (d.ipa ? '  ' + d.ipa : '');
+    setExample(d);
   }
 }
 function renderLearnDone() {
